@@ -1,11 +1,15 @@
 #include <WiFiNINA.h>
 #include <WiFiSSLClient.h>
+#include <ArduinoJson.h>
 #include "Credentials.h"
 
 const char* apiEndpoint = "stepsmartapi.onrender.com";
 
 // Initialize the Wi-Fi client
 WiFiSSLClient client;
+
+// Define the size of the JSON document
+const size_t JSON_DOC_SIZE = 384;
 
 void setup() {
   // Start serial communication
@@ -23,7 +27,7 @@ void loop() {
   makeAPIRequest();
   
   // Wait for some time before making the next request
-  delay(10000);
+  delay(12000);
 }
 
 void connectToWiFi() {
@@ -67,25 +71,52 @@ void makeAPIRequest() {
         }
       }
     }
-    
     // Skip the chunked transfer encoding
+    String response ;
     while (client.available()) {
-      String line = client.readStringUntil('\n');
+     response = client.readStringUntil('\n');
       
-      // Check if the chunk length line is encountered
-      if (line.startsWith("HTTP/1.1 200 OK") || line.startsWith("HTTP/1.1 204 No Content")) {
-        continue;
-      }
-      
-      // Check if the final chunk is reached
-      if (line == "0\r") {
+      if (!isdigit(response.charAt(0))) {
+        // Print the response line
+        Serial.println(response);
         break;
       }
-      
-      // Print the response line
-      Serial.println(line);
     }
+
+    // Check if any data is available for parsing
+    if (!client.available()) {
+      Serial.println("No data received from the server");
+      return;
+    }
+
+    // Create a JSON document
+    StaticJsonDocument<JSON_DOC_SIZE> doc;
+
+    // Parse the JSON response
+    DeserializationError error = deserializeJson(doc, response);
+
+    if (error) {
+      Serial.print("deserializeJson() failed: ");
+      Serial.println(error.c_str());
+      return;
+    }
+
+    // Retrieve data from the JSON document
+    long code = doc["code"];
     
+    JsonObject alert = doc["alert"];
+    int alert_fall = atoi(alert["fall"]);
+    int alert_alarm = atoi(alert["alarm"]);
+    bool alerting = (atoi(alert["alert"]) == 1);
+    int alert_volume = atoi(alert["volume"]);
+
+    const char* contacts_0 = doc["contacts"][0];
+    const char* contacts_1 = doc["contacts"][1];
+
+    bool lost = doc["lost"];
+
+    int battery = doc["battery"];
+
     // Disconnect from the server
     client.stop();
     Serial.println("API request completed.");
