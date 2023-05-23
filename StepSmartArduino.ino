@@ -2,11 +2,6 @@
 #include <WiFiSSLClient.h>
 #include "Credentials.h"
 
-// Replace with your network credentials
-//const char* ssid = "YourWiFiSSID";
-//const char* password = "YourWiFiPassword";
-
-
 const char* apiEndpoint = "stepsmartapi.onrender.com";
 
 // Initialize the Wi-Fi client
@@ -15,6 +10,9 @@ WiFiSSLClient client;
 void setup() {
   // Start serial communication
   Serial.begin(9600);
+  while (!Serial) {
+    ; // Wait for serial port to connect
+  }
   
   // Connect to Wi-Fi
   connectToWiFi();
