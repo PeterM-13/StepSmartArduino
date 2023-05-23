@@ -3,17 +3,18 @@
 This code will run on the Arduino Nano 33 IoT, and act as the brain for the walking stick prototype.
 
 ## Dependencies
+Install the ArduinoSAMD board to be able to upload sketches to the board.
 Install & include these Aduino libaries:
-- wifiNINA (for the on-board wifi chip)
-- Arduino LSM6DS3 (for the on-board Inertial Measurement Uint, IMU)
-- Arduino RTCZero (for the on-board real time clock)
-- Arduino BLE (for the on-board bluetooth chip)
-- Arduino JSON (for parsing json format)
+- `wifiNINA` (for the on-board wifi chip)
+- `ArduinoLSM6DS3` (for the on-board Inertial Measurement Uint, IMU)
+- `ArduinoRTCZero` (for the on-board real time clock, RTC)
+- `ArduinoBLE` (for the on-board bluetooth chip)
+- `ArduinoJSON` (for parsing json format)
 
 ## Environment variables
-WiFi credentials
-- "ssid" (name of the wifi network)
-- "pass" (password for network)
+WiFi credentials:
+- `ssid` (name of the wifi network)
+- `pass` (password for network)
 
 ## Author
 - Peter Metcalfe
