@@ -3,13 +3,21 @@
 #include <ArduinoJson.h>
 #include "Credentials.h"
 
+// define stick data
+long code;
+
+int alert_fall;
+int alert_alarm;
+bool alerting;
+int alert_volume;
+
+bool lost;
+int battery;
+
 const char* apiEndpoint = "stepsmartapi.onrender.com";
 
 // Initialize the Wi-Fi client
 WiFiSSLClient client;
-
-// Define the size of the JSON document
-const size_t JSON_DOC_SIZE = 384;
 
 void setup() {
   // Start serial communication
@@ -20,14 +28,24 @@ void setup() {
   
   // Connect to Wi-Fi
   connectToWiFi();
+
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
   // Make the API request
   makeAPIRequest();
   
+
+  // use data
+  if(alerting){
+    digitalWrite(LED_BUILTIN, HIGH);
+  }else{
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+
   // Wait for some time before making the next request
-  delay(12000);
+  delay(2000);
 }
 
 void connectToWiFi() {
@@ -89,6 +107,9 @@ void makeAPIRequest() {
       return;
     }
 
+    // Define the size of the JSON document
+    const size_t JSON_DOC_SIZE = 384;
+
     // Create a JSON document
     StaticJsonDocument<JSON_DOC_SIZE> doc;
 
@@ -103,19 +124,15 @@ void makeAPIRequest() {
 
     // Retrieve data from the JSON document
     long code = doc["code"];
-    
     JsonObject alert = doc["alert"];
-    int alert_fall = atoi(alert["fall"]);
-    int alert_alarm = atoi(alert["alarm"]);
-    bool alerting = (atoi(alert["alert"]) == 1);
-    int alert_volume = atoi(alert["volume"]);
-
-    const char* contacts_0 = doc["contacts"][0];
-    const char* contacts_1 = doc["contacts"][1];
-
-    bool lost = doc["lost"];
-
-    int battery = doc["battery"];
+    alert_fall = atoi(alert["fall"]);
+    alert_alarm = atoi(alert["alarm"]);
+    alerting = (atoi(alert["alert"]) == 1);
+    alert_volume = atoi(alert["volume"]);
+    //const char* contacts_0 = doc["contacts"][0];
+    //const char* contacts_1 = doc["contacts"][1];
+    lost = doc["lost"];
+    battery = doc["battery"];
 
     // Disconnect from the server
     client.stop();
