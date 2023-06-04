@@ -1,4 +1,5 @@
 #include "apiComms.h"
+#include "LEDsControl.h"
 
 const int FETCH_DELAY_ms = 10000;
 
@@ -12,6 +13,13 @@ void setup() {
   // Connect to Wi-Fi
   connectToWiFi();
 
+  // setup LED strip
+  setupLeds();
+  // Read battery level on start up
+  showLedBatteryLevel(75);
+  delay(1500);
+  toggleLedTorch();
+  
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
@@ -29,4 +37,8 @@ void loop() {
 
   // Wait for some time before making the next request
   delay(FETCH_DELAY_ms);
+
+  // if switch pressed, turn torch on:
+  //toggleLedTorch();
+
 }
