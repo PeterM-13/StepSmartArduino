@@ -1,7 +1,7 @@
 #include "apiComms.h"
 #include "Credentials.h"
 
-// define stick data
+// define walking stick data
 long code;
 int alert_fall;
 int alert_alarm;
@@ -9,6 +9,11 @@ bool alerting;
 int alert_volume;
 bool lost;
 int battery;
+
+bool heartLogging = false;
+int nextHeartRateLog = 0;
+
+bool emergency = false;
 
 const char* apiEndpoint = "stepsmartapi.onrender.com";
 

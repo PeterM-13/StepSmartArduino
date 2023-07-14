@@ -15,6 +15,11 @@ extern int alert_volume;
 extern bool lost;
 extern int battery;
 
+extern bool heartLogging;
+extern int nextHeartRateLog;
+
+extern bool emergency;
+
 void connectToWiFi();
 void makeAPIRequest();
 
