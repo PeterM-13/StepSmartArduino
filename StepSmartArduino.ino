@@ -96,7 +96,46 @@ void loop() {
 // Other Functions
 
 void activateBuzzer(){
-  // sclae to 'alert_volume' using PWM  (Don't worry about custom rythm pulsing)
+
+  // scale to 'alert_volume' using PWM  (Don't worry about custom rythm pulsing)
+
+const int buzzer = 8; //buzzer to arduino pin 8  // the PWM pin the buzzer is attached to
+int volume =  0;          // how loud the buzzer is
+int fadeAmount = 25;     // how many points  to fade the buzzer volume by
+int duty_cycle = 127;    // 0-255 so 50%  = 127 approx
+int setting=0x01;
+
+void setup(){
+  
+TCCR2B = TCCR2B & 0b11111000 | setting;//to  adjust divider for timer
+  
+// declare buzzer pin to be an output:
+  pinMode(buzzer, OUTPUT);
+}
+
+void loop(){
+  
+  analogWrite (buzzer, volume);
+  delay(1000);        // ...for 1 sec
+  noTone(buzzer);     // Stop sound...
+  delay(1000);         // ...for 1sec
+ 
+  // set the volume of pin :
+  analogWrite(buzzer,  volume);
+
+  // change the volume for next time through the loop:
+ volume  = volume + fadeAmount;
+
+  // reverse the direction of the fading at the ends  of the fade:
+ if (volume <= 0 || volume >= 255) {
+    fadeAmount = -fadeAmount;
+}
+  // wait for 100 milliseconds to see the volume effect
+  delay(100);
+}
+
+
+
 }
 void deactivaeBuzzer(){
 
@@ -120,3 +159,29 @@ bool detectFall(){
 
   return fallDetected;
 }
+
+/* code for toggle switch if needed/if useful feel free to delete if not needed
+#define LED_PIN 8
+#define BUTTON_PIN 7
+byte lastButtonState = LOW;
+byte ledState = LOW;
+unsigned long debounceDuration = 50; // millis
+unsigned long lastTimeButtonStateChanged = 0;
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT);
+}
+void loop() {
+  if (millis() - lastTimeButtonStateChanged > debounceDuration) {
+    byte buttonState = digitalRead(BUTTON_PIN);
+    if (buttonState != lastButtonState) {
+      lastTimeButtonStateChanged = millis();
+      lastButtonState = buttonState;
+      if (buttonState == LOW) {
+        ledState = (ledState == HIGH) ? LOW: HIGH;
+        digitalWrite(LED_PIN, ledState);
+      }
+    }
+  }
+}
+*/
