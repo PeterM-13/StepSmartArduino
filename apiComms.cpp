@@ -21,19 +21,27 @@ const char* apiEndpoint = "stepsmartapi.onrender.com";
 WiFiSSLClient client;
 
 void connectToWiFi() {
+  int maxAttempts = 10;
+
   // Connect to Wi-Fi network
   Serial.print("Connecting to Wi-Fi...");
   
   WiFi.begin(ssid, pass);
   
-  while (WiFi.status() != WL_CONNECTED) {
+  int attempt = 0;
+  while (WiFi.status() != WL_CONNECTED && attempt <= maxAttempts) {
     delay(500);
     Serial.print(".");
+    attempt++;
   }
   
-  Serial.println("\nConnected to Wi-Fi!");
-  Serial.print("IP Address: ");
-  Serial.println(WiFi.localIP());
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nConnected to Wi-Fi!");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\nFailed to connect to Wi-Fi");
+  }
 }
 
 void makeAPIRequest() {

@@ -1,6 +1,6 @@
 #include "apiComms.h"
 #include "LEDsControl.h"
-
+#include "fallDetection.h"
 
 const bool ONLINE = false;
 
@@ -34,6 +34,8 @@ void setup() {
   setupLeds();
   // Read battery level on start up
   showLedBatteryLevel(75, 2000);
+
+  setupFallDetection();
 }
 
 
@@ -58,9 +60,8 @@ void loop() {
     }
   }
   
-
-  if(detectFall() == true){
-    emergency = true;
+  if(!emergency){
+    detectFall();
   }
   if(emergency == true){
     if( loopTime + alert_fallTime > alert_fall){
@@ -113,10 +114,4 @@ int readBatteryLevel(){
   int level = -1;
   // read battery level from analouge pin
   return level;
-}
-
-bool detectFall(){
-  bool fallDetected = false;
-
-  return fallDetected;
 }
