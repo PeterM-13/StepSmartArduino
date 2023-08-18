@@ -1,5 +1,6 @@
 #include "apiComms.h"
 #include "LEDsControl.h"
+#include "buzzer.h"
 #include "fallDetection.h"
 
 const bool ONLINE = false;
@@ -35,13 +36,13 @@ void setup() {
   // Read battery level on start up
   showLedBatteryLevel(75, 2000);
 
+  setupBuzzer();
   setupFallDetection();
 }
 
 
 void loop() {
   const long loopTime = millis();  // Time since board started program in ms
-
 
   // Check light-swtich state
     // If High: 'switchLedsOn();'
@@ -53,7 +54,7 @@ void loop() {
     // If high and 'emergency': 'emergency = false;'
 
   if( loopTime + heartLogDelay > heartLogTime && heartLogging ){
-    heartLogTime = loopTime;
+    heartLogTime = loopTime + heartLogDelay;
     nextHeartRateLog = readHeatRate();
     if(nextHeartRateLog > 0){
       // send data to API
@@ -79,29 +80,24 @@ void loop() {
 
 
   if( loopTime + fetchDelay > fetchTime && ONLINE == true ){
-    fetchTime = loopTime;
+    fetchTime = loopTime + fetchDelay;
     // Make the API request to update local data
     makeAPIRequest();
   }
 
 
   if( loopTime + sendDelay > sendTime && ONLINE == true ){
-    sendTime = loopTime;
+    sendTime = loopTime + sendDelay;
     // Make the API request to update local data
     makeAPIRequest();
   }
+
+  buzzerLoop(loopTime);
 }
 
 
 
 // Other Functions
-
-void activateBuzzer(){
-  // sclae to 'alert_volume' using PWM  (Don't worry about custom rythm pulsing)
-}
-void deactivaeBuzzer(){
-
-}
 
 int readHeatRate(){
   int sample = -1;

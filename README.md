@@ -16,5 +16,6 @@ WiFi credentials:
 - `ssid` (name of the wifi network)
 - `pass` (password for network)
 
-## Author
+## Authors
 - Peter Metcalfe
+- Melissa Hobbs
