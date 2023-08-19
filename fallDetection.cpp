@@ -1,8 +1,5 @@
 #include  "fallDetection.h"
 
-bool falling = false;
-bool fallen = false;
-
 void setupFallDetection() {
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
@@ -12,8 +9,12 @@ void setupFallDetection() {
 }
 
 void detectFall(){
-  // gyro
+  bool falling = false;
+  bool fallen = false;
+
   float x, y, z;
+  
+  // gyro
   float threashold = 750.0;
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
