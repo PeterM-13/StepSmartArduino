@@ -1,14 +1,14 @@
 #include "apiComms.h"
 #include "Credentials.h"
 
-// define walking stick data
-long code;
-int alert_fall;
-int alert_alarm;
-bool alerting;
-int alert_volume;
-bool lost;
-int battery;
+// define default walking stick data
+long code = 12345678;
+int alert_fall = 30; //seconds
+int alert_alarm = 30; //seconds
+bool alerting = false;
+int alert_volume = 1000;
+bool lost = false;
+int battery = 70;
 
 bool heartLogging = false;
 int nextHeartRateLog = 0;

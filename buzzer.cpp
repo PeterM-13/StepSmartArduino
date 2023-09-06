@@ -1,6 +1,6 @@
 #include "buzzer.h"
 
-const int buzzerPin = 12;
+const int buzzerPin = 4;
 
 bool buzzerActive = false;
 
@@ -9,6 +9,7 @@ long buzzerTime = 0;
 
 void setupBuzzer(){
   pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, HIGH);
 }
 
 void activateBuzzer(){
