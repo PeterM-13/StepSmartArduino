@@ -1,4 +1,5 @@
 #include "apiComms.h"
+#include "LEDsControl.h"
 
 void setupBuzzer();
 void activateBuzzer();

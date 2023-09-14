@@ -22,5 +22,6 @@ extern bool emergency;
 
 void connectToWiFi();
 void makeAPIRequest();
-
+void sendHeartDataToAPI(int bpm)
+void sendEmergencyDataToAPI(bool fall);
 #endif

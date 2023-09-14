@@ -18,14 +18,27 @@ void activateBuzzer(){
 
 void deactivaeBuzzer(){
   buzzerActive = false;
-  digitalWrite(buzzerPin, 0);
+  digitalWrite(buzzerPin, HIGH);
 }
 
 void buzzerLoop(long loopTime){
   if(buzzerActive){
-    if(loopTime + buzzerDelay > buzzerTime){
-      buzzerTime = loopTime + buzzerDelay;
-      digitalWrite(buzzerPin, !digitalRead(buzzerPin));
-    }
+    // if(loopTime + buzzerDelay > buzzerTime){
+    //   buzzerTime = loopTime + buzzerDelay;
+    //   digitalWrite(buzzerPin, !digitalRead(buzzerPin));
+    // }
+    digitalWrite(buzzerPin, LOW);
+    showRedLeds();
+    delay(buzzerDelay);
+    digitalWrite(buzzerPin, HIGH);
+    showLedsOff();
+    delay(buzzerDelay);
+  }else if(lost){
+    digitalWrite(buzzerPin, LOW);
+    showLedsOn();
+    delay(150);
+    digitalWrite(buzzerPin, HIGH);
+    showLedsOff();
+    delay(800);
   }
 }

@@ -5,6 +5,7 @@ void setupLeds();
 void showLedBatteryLevel(int percentage, int timeDelay);
 void toggleLedTorch();
 void showRedLeds();
+void showOrangeLeds();
 bool areLedsZero();
 bool areLedsOff();
 void switchLedsOn();

@@ -6,8 +6,9 @@ This code will run on the Arduino Nano 33 IoT, and act as the brain for the walk
 Install the ArduinoSAMD board to be able to upload sketches to the board.<br>
 Install & include these Aduino libaries:
 - `wifiNINA` (for the on-board wifi chip)
-- `ArduinoLSM6DS3` (for the on-board Inertial Measurement Uint, IMU)
-- `ArduinoRTCZero` (for the on-board real time clock, RTC)
+- `ArduinoLSM6DS3` (for the on-board Inertial Measurement Unit, IMU)
+- `simpletimer` (for handling intervals)
+- `ArduinoRTCZero` (for the on-board real-time clock, RTC)
 - `ArduinoBLE` (for the on-board bluetooth chip)
 - `ArduinoJSON` (for parsing json format)
 

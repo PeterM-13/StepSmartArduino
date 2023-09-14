@@ -59,8 +59,12 @@ void showLedsOff(){
 }
 
 void showRedLeds(){
-  switchLedsOn();
   fill_solid(leds, NUM_LEDS, CRGB(255, 0, 0));
+  FastLED.show();
+}
+
+void showOrangeLeds(){
+  fill_solid(leds, NUM_LEDS, CRGB(255, 140, 0));
   FastLED.show();
 }
 

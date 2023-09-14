@@ -4,12 +4,13 @@
 #include "LEDsControl.h"
 #include "buzzer.h"
 #include "fallDetection.h"
+#include "HeartMonitoring.h"
 
-const bool ONLINE = false;
+const bool ONLINE = true;
 
 long heartLogTime = 0;
-const int fetchDelay = 10000;       // every 10s, update with data from cloud
-const int sendDelay = 10000;       // every 10s, update with data from cloud
+const int fetchDelay = 100000;       // every 10s, update with data from cloud (remove 0 from each)
+const int sendDelay = 200000;       // every 20s, update with data from cloud
 const int heartLogDelay = 60000;    // every minute take heart rate sample
 
 Simpletimer fetchTimer{};
@@ -25,17 +26,20 @@ const int ledSwitchPin = 2;
 const int emergencyButtonPin = 3;
 //const int ledControlPin = 5
 // Analouge pins
-const int batteryPin = 15;
-const int heartPin = 16;
+const int batteryPin = A1;//15;
 
 int alertStage = 0; // 0=off, 1=buzzer&lights, 2=notify
+
+bool ledSwitchState = LOW;
+bool emergencyButtonState = LOW;
 
 void setup() {
   // Start serial communication for debugging
   Serial.begin(9600);
   while (!Serial) {
-    ; // Wait for serial port to connect
+   ; // Wait for serial port to connect
   }
+  pinMode(LED_BUILTIN, OUTPUT);
 
   // Setup Pins
   //pinMode(LED_BUILTIN, OUTPUT);
@@ -44,16 +48,15 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(emergencyButtonPin), emergencySwitch, FALLING);
   attachInterrupt(digitalPinToInterrupt(ledSwitchPin), ledSwitch, CHANGE);
 
-  pinMode(batteryPin, INPUT);
-  pinMode(heartPin, INPUT);
-
   // Setup functions
   setupLeds();
 
   setupBuzzer();
 
   // Read battery level on start up
-  showLedBatteryLevel(battery, 2000);
+  int percentage = readBatteryLevel();
+  Serial.println(percentage);
+  showLedBatteryLevel(percentage, 3000);
 
   // setupFallDetection();
 
@@ -73,20 +76,13 @@ void setup() {
 void loop() {
   const long loopTime = millis();  // Time since board started program in ms
 
-  // if( loopTime + heartLogDelay > heartLogTime && heartLogging ){
-  //   heartLogTime = loopTime + heartLogDelay;
-  //   nextHeartRateLog = readHeatRate();
-  //   if(nextHeartRateLog > 0){
-  //     // send data to API
-  //   }
-  // }
   fetchTimer.run(fetchDelay);
   sendTimer.run(sendDelay);
   
   //if(!emergency){
     //detectFall();
  // }
- 
+
   if(emergency == true){
     if(alertStage == 0){
       alert_fallTimer.run(alert_fall*1000);
@@ -102,14 +98,17 @@ void loop() {
   }
 
   buzzerLoop(loopTime);
+  heartLoop(!ledSwitchState);
 }
 
 // --- Timer functions --- //
 void fetchTimerCallback(){
-  makeAPIRequest();
+  Serial.println("Make API request");
+  //makeAPIRequest();
 }
 void sendTimerCallback(){
-  ;// ToDO
+  Serial.println("Send API request");
+  // ToDO
 }
 void alert_fallTimerCallback(){
   activateBuzzer();
@@ -125,29 +124,50 @@ void alert_alarmTimerCallback(){
 }
 
 // --- Other Functions --- //
-bool emergencyButtonState = LOW;
 void emergencySwitch(){
   emergencyButtonState = !emergencyButtonState;
   emergency = !emergency;
-  alertStage = 0;
+  if(emergency){
+    alert_fallTimerCallback();
+  }else{
+    showLedsOff();
+    deactivaeBuzzer();
+  }
   delay(20);
 }
-bool ledSwitchState = LOW;
+
 void ledSwitch(){
   ledSwitchState = !ledSwitchState;
   toggleLedTorch();
   delay(20);
 }
 
-int readHeatRate(){
-  int sample = -1;
-  // take heart rate sample
-
-  return sample;
-}
-
+long totalBattery = 0;
+int outputBattery = 0;
+int numSamples = 600;
+//int ref = 0;
 int readBatteryLevel(){
-  int level = -1;
-  // read battery level from analouge pin
-  return level;
+  //int perc = battery;
+  for(int i=0; i<numSamples;i++){
+    int val = analogRead(batteryPin);  // read the input pin
+    totalBattery += val;
+    outputBattery = int(totalBattery/100);
+    totalBattery -= outputBattery;
+  }
+  float volts = (outputBattery * 0.003222) / 0.75;
+  int perc = ((volts - 3) / 1.2) * 100;
+
+  if(perc < 0 || perc > 100){
+    Serial.print("ERROR with perc: ");
+    Serial.println(perc);
+    perc = 50;
+  }
+  // Serial.print(output);          // debug value
+  // Serial.print(" ");
+  // Serial.print(volts);          // debug value
+  // Serial.print(" ");
+  // Serial.print(perc);          // debug value
+  // Serial.print(" ");
+  // Serial.println(ref);
+  return perc;
 }

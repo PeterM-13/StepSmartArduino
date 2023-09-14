@@ -5,15 +5,15 @@
 long code = 12345678;
 int alert_fall = 30; //seconds
 int alert_alarm = 30; //seconds
-bool alerting = false;
-int alert_volume = 1000;
+bool alerting = true;
+int alert_volume = 100; //ms
 bool lost = false;
 int battery = 70;
 
 bool heartLogging = false;
 int nextHeartRateLog = 0;
 
-bool emergency = false;
+bool emergency = true;
 
 const char* apiEndpoint = "stepsmartapi.onrender.com";
 
@@ -21,7 +21,7 @@ const char* apiEndpoint = "stepsmartapi.onrender.com";
 WiFiSSLClient client;
 
 void connectToWiFi() {
-  int maxAttempts = 10;
+  const int maxAttempts = 10;
 
   // Connect to Wi-Fi network
   Serial.print("Connecting to Wi-Fi...");
@@ -39,6 +39,17 @@ void connectToWiFi() {
     Serial.println("\nConnected to Wi-Fi!");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
+    
+    // makeAPIRequest();
+    // Serial.println(alert_fall);
+    // Serial.println(alert_alarm);
+    // Serial.println(alerting);
+    // Serial.println(alert_volume);
+    // Serial.println(lost);
+    
+    //sendAlertDataToAPI();
+    sendEmergencyDataToAPI(false);
+
   } else {
     Serial.println("\nFailed to connect to Wi-Fi");
   }
@@ -88,7 +99,7 @@ void makeAPIRequest() {
     }
 
     // Define the size of the JSON document
-    const size_t JSON_DOC_SIZE = 384;
+    const size_t JSON_DOC_SIZE = 700;
 
     // Create a JSON document
     StaticJsonDocument<JSON_DOC_SIZE> doc;
@@ -112,12 +123,181 @@ void makeAPIRequest() {
     //const char* contacts_0 = doc["contacts"][0];
     //const char* contacts_1 = doc["contacts"][1];
     lost = doc["lost"];
-    battery = doc["battery"];
+    //battery = doc["battery"];
 
     // Disconnect from the server
     client.stop();
     Serial.println("API request completed.");
   } else {
     Serial.println("Connection to API failed!");
+  }
+}
+
+
+void sendHeartDataToAPI(int bpm) {
+  // Connect to the API endpoint
+  Serial.print("Connecting to API for PATCH request...");
+
+  if (client.connect(apiEndpoint, 443)) {
+    Serial.println("Connected!");
+
+    // Create a JSON document
+    const size_t JSON_DOC_SIZE = 200;
+    StaticJsonDocument<JSON_DOC_SIZE> patchDoc;
+
+    // Set the values for the JSON document
+    patchDoc["heartRate"] = bpm;
+
+    // Serialize the JSON document to a string
+    String jsonBody;
+    serializeJson(patchDoc, jsonBody);
+
+    // Make the HTTPS PATCH request
+    String request = "PATCH /StepSmart/api/alert?code=12345678 HTTP/1.1\r\n";
+    request += "Host: ";
+    request += apiEndpoint;
+    request += "\r\n";
+    request += "Connection: close\r\n";
+    request += "Content-Type: application/json\r\n";
+    request += "Content-Length: ";
+    request += String(jsonBody.length());
+    request += "\r\n\r\n";
+    request += jsonBody;
+
+    client.print(request);
+
+    // Wait for the server's response
+    while (client.connected()) {
+      if (client.available()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+          Serial.println("API response:");
+          break;
+        }
+      }
+    }
+    // Read and print the response from the server
+    while (client.available()) {
+      String response = client.readStringUntil('\n');
+      Serial.println(response);
+    }
+    // Disconnect from the server
+    client.stop();
+    Serial.println("PATCH request completed.");
+  } else {
+    Serial.println("Connection to API failed for PATCH request!");
+  }
+}
+
+
+void sendEmergencyDataToAPI(bool fall) {
+  // Connect to the API endpoint
+  Serial.print("Connecting to API for PATCH request...");
+
+  if (client.connect(apiEndpoint, 443)) {
+    Serial.println("Connected!");
+
+    // Create a JSON document
+    const size_t JSON_DOC_SIZE = 200;
+    StaticJsonDocument<JSON_DOC_SIZE> patchDoc;
+
+    // Set the values for the JSON document
+    patchDoc["emergency"] = emergency;
+    patchDoc["fall"] = fall;
+
+    // Serialize the JSON document to a string
+    String jsonBody;
+    serializeJson(patchDoc, jsonBody);
+
+    // Make the HTTPS PATCH request
+    String request = "PATCH /StepSmart/api/emergency?code=12345678 HTTP/1.1\r\n";
+    request += "Host: ";
+    request += apiEndpoint;
+    request += "\r\n";
+    request += "Connection: close\r\n";
+    request += "Content-Type: application/json\r\n";
+    request += "Content-Length: ";
+    request += String(jsonBody.length());
+    request += "\r\n\r\n";
+    request += jsonBody;
+
+    client.print(request);
+
+    // Wait for the server's response
+    while (client.connected()) {
+      if (client.available()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+          Serial.println("API response:");
+          break;
+        }
+      }
+    }
+    // Read and print the response from the server
+    while (client.available()) {
+      String response = client.readStringUntil('\n');
+      Serial.println(response);
+    }
+    // Disconnect from the server
+    client.stop();
+    Serial.println("PATCH request completed.");
+  } else {
+    Serial.println("Connection to API failed for PATCH request!");
+  }
+}
+
+
+void sendBatteryDataToAPI() {
+  // Connect to the API endpoint
+  Serial.print("Connecting to API for PATCH request...");
+
+  if (client.connect(apiEndpoint, 443)) {
+    Serial.println("Connected!");
+
+    // Create a JSON document
+    const size_t JSON_DOC_SIZE = 200;
+    StaticJsonDocument<JSON_DOC_SIZE> patchDoc;
+
+    // Set the values for the JSON document
+    patchDoc["battery"] = battery;
+
+    // Serialize the JSON document to a string
+    String jsonBody;
+    serializeJson(patchDoc, jsonBody);
+
+    // Make the HTTPS PATCH request
+    String request = "PATCH /StepSmart/api/alert?code=12345678 HTTP/1.1\r\n";
+    request += "Host: ";
+    request += apiEndpoint;
+    request += "\r\n";
+    request += "Connection: close\r\n";
+    request += "Content-Type: application/json\r\n";
+    request += "Content-Length: ";
+    request += String(jsonBody.length());
+    request += "\r\n\r\n";
+    request += jsonBody;
+
+    client.print(request);
+
+    // Wait for the server's response
+    while (client.connected()) {
+      if (client.available()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+          Serial.println("API response:");
+          break;
+        }
+      }
+    }
+    // Read and print the response from the server
+    while (client.available()) {
+      String response = client.readStringUntil('\n');
+      Serial.println(response);
+    }
+    // Disconnect from the server
+    client.stop();
+    Serial.println("PATCH request completed.");
+  } else {
+    Serial.println("Connection to API failed for PATCH request!");
   }
 }
