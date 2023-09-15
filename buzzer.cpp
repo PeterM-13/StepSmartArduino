@@ -4,7 +4,6 @@ const int buzzerPin = 4;
 
 bool buzzerActive = false;
 
-const int buzzerDelay = alert_volume;
 long buzzerTime = 0;
 
 void setupBuzzer(){
@@ -22,6 +21,7 @@ void deactivaeBuzzer(){
 }
 
 void buzzerLoop(long loopTime){
+  const int buzzerDelay = alert_volume;
   if(buzzerActive){
     // if(loopTime + buzzerDelay > buzzerTime){
     //   buzzerTime = loopTime + buzzerDelay;

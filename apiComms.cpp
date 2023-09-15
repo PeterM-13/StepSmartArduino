@@ -1,6 +1,8 @@
 #include "apiComms.h"
 #include "Credentials.h"
 
+bool online = false;
+
 // define default walking stick data
 long code = 12345678;
 int alert_fall = 30; //seconds
@@ -10,10 +12,9 @@ int alert_volume = 100; //ms
 bool lost = false;
 int battery = 70;
 
-bool heartLogging = false;
-int nextHeartRateLog = 0;
+bool heartLogging = true;
 
-bool emergency = true;
+bool emergency = false;
 
 const char* apiEndpoint = "stepsmartapi.onrender.com";
 
@@ -31,41 +32,35 @@ void connectToWiFi() {
   int attempt = 0;
   while (WiFi.status() != WL_CONNECTED && attempt <= maxAttempts) {
     delay(500);
-    Serial.print(".");
+    //Serial.print(".");
     attempt++;
+    noWifi(255, 140, 0);
   }
   
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\nConnected to Wi-Fi!");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
-    
-    // makeAPIRequest();
-    // Serial.println(alert_fall);
-    // Serial.println(alert_alarm);
-    // Serial.println(alerting);
-    // Serial.println(alert_volume);
-    // Serial.println(lost);
-    
-    //sendAlertDataToAPI();
-    sendEmergencyDataToAPI(false);
+    online = true;
+    noWifi(0, 255, 0);
 
   } else {
     Serial.println("\nFailed to connect to Wi-Fi");
+    online = false;
+    noWifi(255, 10, 0);
   }
 }
 
 void makeAPIRequest() {
+  showOneLed(8, 3, 0);
   // Connect to the API endpoint
-  Serial.print("Connecting to API...");
-  
+  Serial.print("Connecting to API for an update request...");
+  client.setTimeout(4000);
   if (client.connect(apiEndpoint, 443)) {
-    Serial.println("Connected!");
+    //Serial.println("Connected!");
     
     // Make the HTTPS request
-    client.print(String("GET /StepSmart/api?code=12345678 HTTP/1.1\r\n") +
-                 "Host: " + apiEndpoint + "\r\n" +
-                 "Connection: close\r\n\r\n");
+    client.print("GET /StepSmart/api?code=12345678 HTTP/1.1\r\nHost: stepsmartapi.onrender.com\r\nConnection: close\r\n\r\n");
     
     // Wait for the server's response
     while (client.connected()) {
@@ -75,7 +70,7 @@ void makeAPIRequest() {
         
         // Check if the response body starts
         if (line == "\r") {
-          Serial.println("API response:");
+          //Serial.println("API response:");
           break;
         }
       }
@@ -87,7 +82,7 @@ void makeAPIRequest() {
       
       if (!isdigit(response.charAt(0))) {
         // Print the response line
-        Serial.println(response);
+        //Serial.println(response);
         break;
       }
     }
@@ -112,18 +107,17 @@ void makeAPIRequest() {
       Serial.println(error.c_str());
       return;
     }
-
+    showOneLed(0, 100, 0);
     // Retrieve data from the JSON document
     long code = doc["code"];
     JsonObject alert = doc["alert"];
     alert_fall = atoi(alert["fall"]);
     alert_alarm = atoi(alert["alarm"]);
     alerting = (atoi(alert["alert"]) == 1);
-    alert_volume = atoi(alert["volume"]);
-    //const char* contacts_0 = doc["contacts"][0];
-    //const char* contacts_1 = doc["contacts"][1];
+    alert_volume = (11-atoi(alert["volume"])) * 20;
     lost = doc["lost"];
-    //battery = doc["battery"];
+    JsonObject heartData = doc["heartrate"];
+    heartLogging = (atoi("logging") == 1);
 
     // Disconnect from the server
     client.stop();
@@ -136,7 +130,7 @@ void makeAPIRequest() {
 
 void sendHeartDataToAPI(int bpm) {
   // Connect to the API endpoint
-  Serial.print("Connecting to API for PATCH request...");
+  Serial.print("Connecting to API for heart rate PATCH request...");
 
   if (client.connect(apiEndpoint, 443)) {
     Serial.println("Connected!");
@@ -146,14 +140,14 @@ void sendHeartDataToAPI(int bpm) {
     StaticJsonDocument<JSON_DOC_SIZE> patchDoc;
 
     // Set the values for the JSON document
-    patchDoc["heartRate"] = bpm;
+    patchDoc["value"] = bpm;
 
     // Serialize the JSON document to a string
     String jsonBody;
     serializeJson(patchDoc, jsonBody);
 
     // Make the HTTPS PATCH request
-    String request = "PATCH /StepSmart/api/alert?code=12345678 HTTP/1.1\r\n";
+    String request = "POST /StepSmart/api/heartBpm?code=12345678 HTTP/1.1\r\n";
     request += "Host: ";
     request += apiEndpoint;
     request += "\r\n";
@@ -165,7 +159,7 @@ void sendHeartDataToAPI(int bpm) {
     request += jsonBody;
 
     client.print(request);
-
+    client.setTimeout(4000);
     // Wait for the server's response
     while (client.connected()) {
       if (client.available()) {
@@ -192,7 +186,7 @@ void sendHeartDataToAPI(int bpm) {
 
 void sendEmergencyDataToAPI(bool fall) {
   // Connect to the API endpoint
-  Serial.print("Connecting to API for PATCH request...");
+  Serial.print("Connecting to API for emergency PATCH request...");
 
   if (client.connect(apiEndpoint, 443)) {
     Serial.println("Connected!");
@@ -222,7 +216,7 @@ void sendEmergencyDataToAPI(bool fall) {
     request += jsonBody;
 
     client.print(request);
-
+    client.setTimeout(4000);
     // Wait for the server's response
     while (client.connected()) {
       if (client.available()) {
@@ -249,7 +243,7 @@ void sendEmergencyDataToAPI(bool fall) {
 
 void sendBatteryDataToAPI() {
   // Connect to the API endpoint
-  Serial.print("Connecting to API for PATCH request...");
+  Serial.print("Connecting to API for battery PATCH request...");
 
   if (client.connect(apiEndpoint, 443)) {
     Serial.println("Connected!");
@@ -266,7 +260,7 @@ void sendBatteryDataToAPI() {
     serializeJson(patchDoc, jsonBody);
 
     // Make the HTTPS PATCH request
-    String request = "PATCH /StepSmart/api/alert?code=12345678 HTTP/1.1\r\n";
+    String request = "PATCH /StepSmart/api/battery?code=12345678 HTTP/1.1\r\n";
     request += "Host: ";
     request += apiEndpoint;
     request += "\r\n";
@@ -278,7 +272,7 @@ void sendBatteryDataToAPI() {
     request += jsonBody;
 
     client.print(request);
-
+    client.setTimeout(4000);
     // Wait for the server's response
     while (client.connected()) {
       if (client.available()) {

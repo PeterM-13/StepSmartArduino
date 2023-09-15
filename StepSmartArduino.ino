@@ -1,4 +1,4 @@
-#include <Simpletimer.h>
+#include <arduino-timer.h>
 
 #include "apiComms.h"
 #include "LEDsControl.h"
@@ -6,19 +6,11 @@
 #include "fallDetection.h"
 #include "HeartMonitoring.h"
 
-const bool ONLINE = true;
+const int fetchDelay = 20;       // every 20s, update with data from cloud (remove 0 from each)
 
-long heartLogTime = 0;
-const int fetchDelay = 100000;       // every 10s, update with data from cloud (remove 0 from each)
-const int sendDelay = 200000;       // every 20s, update with data from cloud
-const int heartLogDelay = 60000;    // every minute take heart rate sample
-
-Simpletimer fetchTimer{};
-Simpletimer sendTimer{};
-Simpletimer alert_fallTimer{};
-Simpletimer alert_alarmTimer{};
-
-bool deactivateEmergency = false;
+auto fetchTimer = timer_create_default();
+auto alert_fallTimer = timer_create_default();
+auto alert_alarmTimer = timer_create_default();
 
 // Interupts: 2, 3, 9, 10, 11, 13, A1, A5, A7
 // Digiatl pins
@@ -28,18 +20,17 @@ const int emergencyButtonPin = 3;
 // Analouge pins
 const int batteryPin = A1;//15;
 
-int alertStage = 0; // 0=off, 1=buzzer&lights, 2=notify
+int alertStage = 0; // 0=off, 1=wating_for_lift-up, 2=buzzer&lights, 3=notify
 
 bool ledSwitchState = LOW;
 bool emergencyButtonState = LOW;
 
 void setup() {
-  // Start serial communication for debugging
-  Serial.begin(9600);
-  while (!Serial) {
-   ; // Wait for serial port to connect
-  }
-  pinMode(LED_BUILTIN, OUTPUT);
+  // Serial.begin(9600);
+  // while (!Serial) {
+  //  ; // Wait for serial port to connect
+  // }
+  //pinMode(LED_BUILTIN, OUTPUT);
 
   // Setup Pins
   //pinMode(LED_BUILTIN, OUTPUT);
@@ -50,90 +41,93 @@ void setup() {
 
   // Setup functions
   setupLeds();
-
   setupBuzzer();
+  setupFallDetection();
+
+  connectToWiFi();
 
   // Read battery level on start up
-  int percentage = readBatteryLevel();
-  Serial.println(percentage);
-  showLedBatteryLevel(percentage, 3000);
-
-  // setupFallDetection();
-
-  if(ONLINE == true){
-    // Connect to Wi-Fi
-    connectToWiFi();
-  }
+  readBatteryLevel();
+  showLedBatteryLevel(3000);
 
   // Setup timers
-  fetchTimer.register_callback(fetchTimerCallback);
-  sendTimer.register_callback(sendTimerCallback);
-  alert_fallTimer.register_callback(alert_fallTimerCallback);
-  alert_alarmTimer.register_callback(alert_alarmTimerCallback);
+  fetchTimer.every(fetchDelay*1000, fetchTimerCallback);
 }
 
 
 void loop() {
   const long loopTime = millis();  // Time since board started program in ms
-
-  fetchTimer.run(fetchDelay);
-  sendTimer.run(sendDelay);
   
-  //if(!emergency){
-    //detectFall();
- // }
-
-  if(emergency == true){
-    if(alertStage == 0){
-      alert_fallTimer.run(alert_fall*1000);
-    }else if(alertStage == 1){
-      alert_alarmTimer.run(alert_alarm*1000);
-    }else if(alertStage == 2){
-      // Alerted and notified, so over
+  if(!emergency){
+    if(alertStage == 0 && detectFall()){
+      emergency = true;
+      showRedLeds();
+      alert_fallTimer.in(alert_fall*1000, alert_fallTimerCallback);
+      alertStage = 1;
+    }
+    if(online){
+      fetchTimer.tick();
+    }
+    if(heartLogging){
+      heartLoop(!ledSwitchState);
+    }
+  }else if(emergency) {
+    alert_fallTimer.tick();
+    alert_alarmTimer.tick();
+    if(alertStage == 1 && detectLift()){
       emergency = false;
-      alertStage = 0;
       showLedsOff();
-      deactivaeBuzzer();
+      alert_fallTimer.cancel();
     }
   }
 
   buzzerLoop(loopTime);
-  heartLoop(!ledSwitchState);
 }
 
 // --- Timer functions --- //
-void fetchTimerCallback(){
-  Serial.println("Make API request");
-  //makeAPIRequest();
+bool fetchTimerCallback(void *){
+  //Serial.println("Make API request");
+  makeAPIRequest();
+  if(ledSwitchState){
+    showOneLed(255, 255, 255);
+  }else{
+    showOneLed(0, 0, 0);
+  }
+  return true;
 }
-void sendTimerCallback(){
-  Serial.println("Send API request");
-  // ToDO
-}
-void alert_fallTimerCallback(){
+bool alert_fallTimerCallback(void *){
   activateBuzzer();
   showRedLeds();
-  alertStage = 1;
-}
-void alert_alarmTimerCallback(){
-  if(alerting){
-    // send data to api - send notifiactions
-    Serial.println("Todo: send");
-  }
   alertStage = 2;
+  alert_alarmTimer.in(alert_alarm*1000, alert_alarmTimerCallback);
+  return false;
+}
+bool alert_alarmTimerCallback(void *){
+  //Serial.println("Notifying");
+  if(alerting && online){
+    sendEmergencyDataToAPI(false);
+  }
+  showLedsOff();
+  deactivaeBuzzer();
+  return false;
 }
 
 // --- Other Functions --- //
 void emergencySwitch(){
-  emergencyButtonState = !emergencyButtonState;
   emergency = !emergency;
   if(emergency){
-    alert_fallTimerCallback();
+    alertStage = 2;
+    activateBuzzer();
+    showRedLeds();
+    alert_alarmTimer.in(alert_alarm*1000, alert_alarmTimerCallback);
   }else{
     showLedsOff();
     deactivaeBuzzer();
+    alert_alarmTimer.cancel();
+    alertStage = 0;
+    emergency = false;
   }
-  delay(20);
+  delay(10);
 }
 
 void ledSwitch(){
@@ -146,7 +140,7 @@ long totalBattery = 0;
 int outputBattery = 0;
 int numSamples = 600;
 //int ref = 0;
-int readBatteryLevel(){
+void readBatteryLevel(){
   //int perc = battery;
   for(int i=0; i<numSamples;i++){
     int val = analogRead(batteryPin);  // read the input pin
@@ -162,6 +156,7 @@ int readBatteryLevel(){
     Serial.println(perc);
     perc = 50;
   }
+  battery = perc;
   // Serial.print(output);          // debug value
   // Serial.print(" ");
   // Serial.print(volts);          // debug value
@@ -169,5 +164,5 @@ int readBatteryLevel(){
   // Serial.print(perc);          // debug value
   // Serial.print(" ");
   // Serial.println(ref);
-  return perc;
+  if(online){sendBatteryDataToAPI();}
 }

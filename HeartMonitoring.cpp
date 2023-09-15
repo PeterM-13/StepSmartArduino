@@ -26,7 +26,7 @@ void heartLoop(bool pulsing){
   if(output > threshold && prevOutput <= threshold && logging == false){
     logging = true;
     logIndex = 0;
-    if(pulsing){showOrangeLeds();}
+    //if(pulsing){showOrangeLeds();}
   }
   prevOutput = output;
   if(logging){
@@ -43,6 +43,7 @@ void heartLoop(bool pulsing){
           }
         }
         if(pass){
+          if(pulsing){displayHeartBeat(3, 0, 40);}
           int bpm = 60.0 / (beatTime/1000.0);
           //Serial.println("Beat!");
           if(bpm > 40 && bpm < 120){
@@ -57,13 +58,14 @@ void heartLoop(bool pulsing){
                 total += bpmAvrg[i];
               }
               int avrgBpm = total / 5;
-              Serial.print("BPM = ");
-              Serial.println(avrgBpm);
+              //Serial.print("BPM = ");
+              //Serial.println(avrgBpm);
+              if(online){sendHeartDataToAPI(avrgBpm);}
             }
           }
         }
       }
-      if(pulsing){showLedsOff();}
+      //if(pulsing){showLedsOff();}
       lastBeat = time;
     }else{
       data[logIndex] = output;

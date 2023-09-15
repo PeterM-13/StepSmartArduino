@@ -5,6 +5,9 @@
 #include <WiFi.h>
 #include <WiFiSSLClient.h>
 #include <ArduinoJson.h>
+#include "LEDsControl.h"
+
+extern bool online;
 
 // define stick data
 extern int alert_fall;
@@ -14,14 +17,12 @@ extern bool alerting;
 extern int alert_volume;
 extern bool lost;
 extern int battery;
-
 extern bool heartLogging;
-extern int nextHeartRateLog;
-
 extern bool emergency;
 
 void connectToWiFi();
 void makeAPIRequest();
-void sendHeartDataToAPI(int bpm)
+void sendHeartDataToAPI(int bpm);
 void sendEmergencyDataToAPI(bool fall);
+void sendBatteryDataToAPI();
 #endif
