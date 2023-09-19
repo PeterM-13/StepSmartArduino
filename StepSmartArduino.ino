@@ -79,6 +79,7 @@ void loop() {
     if(alertStage == 1 && detectLift()){
       emergency = false;
       fallDetected = false;
+      alertStage = 0;
       showLedsOff();
       alert_fallTimer.cancel();
     }
@@ -128,6 +129,7 @@ void emergencySwitch(){
     showLedsOff();
     deactivaeBuzzer();
     alert_alarmTimer.cancel();
+    alert_fallTimer.cancel();
     alertStage = 0;
     emergency = false;
     fallDetected = false;
