@@ -21,6 +21,7 @@ const int emergencyButtonPin = 3;
 const int batteryPin = A1;//15;
 
 int alertStage = 0; // 0=off, 1=wating_for_lift-up, 2=buzzer&lights, 3=notify
+bool fallDetected = false;
 
 bool ledSwitchState = LOW;
 bool emergencyButtonState = LOW;
@@ -61,6 +62,7 @@ void loop() {
   if(!emergency){
     if(alertStage == 0 && detectFall()){
       emergency = true;
+      fallDetected = true;
       showRedLeds();
       alert_fallTimer.in(alert_fall*1000, alert_fallTimerCallback);
       alertStage = 1;
@@ -69,13 +71,14 @@ void loop() {
       fetchTimer.tick();
     }
     if(heartLogging){
-      heartLoop(!ledSwitchState);
+      heartLoop((!ledSwitchState && !emergency));
     }
   }else if(emergency) {
     alert_fallTimer.tick();
     alert_alarmTimer.tick();
     if(alertStage == 1 && detectLift()){
       emergency = false;
+      fallDetected = false;
       showLedsOff();
       alert_fallTimer.cancel();
     }
@@ -105,10 +108,11 @@ bool alert_fallTimerCallback(void *){
 bool alert_alarmTimerCallback(void *){
   //Serial.println("Notifying");
   if(alerting && online){
-    sendEmergencyDataToAPI(false);
+    sendEmergencyDataToAPI(fallDetected);
   }
   showLedsOff();
   deactivaeBuzzer();
+  emergency = false;
   return false;
 }
 
@@ -126,8 +130,9 @@ void emergencySwitch(){
     alert_alarmTimer.cancel();
     alertStage = 0;
     emergency = false;
+    fallDetected = false;
   }
-  delay(10);
+  delay(20);
 }
 
 void ledSwitch(){

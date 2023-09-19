@@ -5,8 +5,8 @@ bool online = false;
 
 // define default walking stick data
 long code = 12345678;
-int alert_fall = 30; //seconds
-int alert_alarm = 30; //seconds
+int alert_fall = 15; //seconds
+int alert_alarm = 15; //seconds
 bool alerting = true;
 int alert_volume = 100; //ms
 bool lost = false;
@@ -117,7 +117,7 @@ void makeAPIRequest() {
     alert_volume = (11-atoi(alert["volume"])) * 20;
     lost = doc["lost"];
     JsonObject heartData = doc["heartrate"];
-    heartLogging = (atoi("logging") == 1);
+    heartLogging = (atoi(heartData["logging"]) == 1);
 
     // Disconnect from the server
     client.stop();
@@ -165,7 +165,7 @@ void sendHeartDataToAPI(int bpm) {
       if (client.available()) {
         String line = client.readStringUntil('\n');
         if (line == "\r") {
-          Serial.println("API response:");
+          //Serial.println("API response:");
           break;
         }
       }
@@ -173,7 +173,7 @@ void sendHeartDataToAPI(int bpm) {
     // Read and print the response from the server
     while (client.available()) {
       String response = client.readStringUntil('\n');
-      Serial.println(response);
+      //Serial.println(response);
     }
     // Disconnect from the server
     client.stop();
@@ -222,7 +222,7 @@ void sendEmergencyDataToAPI(bool fall) {
       if (client.available()) {
         String line = client.readStringUntil('\n');
         if (line == "\r") {
-          Serial.println("API response:");
+          //Serial.println("API response:");
           break;
         }
       }
@@ -230,7 +230,7 @@ void sendEmergencyDataToAPI(bool fall) {
     // Read and print the response from the server
     while (client.available()) {
       String response = client.readStringUntil('\n');
-      Serial.println(response);
+      //Serial.println(response);
     }
     // Disconnect from the server
     client.stop();
@@ -278,7 +278,7 @@ void sendBatteryDataToAPI() {
       if (client.available()) {
         String line = client.readStringUntil('\n');
         if (line == "\r") {
-          Serial.println("API response:");
+          //Serial.println("API response:");
           break;
         }
       }
@@ -286,7 +286,7 @@ void sendBatteryDataToAPI() {
     // Read and print the response from the server
     while (client.available()) {
       String response = client.readStringUntil('\n');
-      Serial.println(response);
+      //Serial.println(response);
     }
     // Disconnect from the server
     client.stop();

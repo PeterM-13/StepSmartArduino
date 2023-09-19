@@ -5,7 +5,7 @@ void setupFallDetection() {
     Serial.println("Failed to initialize IMU!");
   }
 
-  Serial.println("detecting...");
+ // Serial.println("detecting...");
 }
 
 bool detectFall(){
@@ -14,7 +14,7 @@ bool detectFall(){
   float x, y, z;
   
   // gyro
-  float threashold = 750.0;
+  float threashold = 100.0;
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
     if(x > threashold || x < threashold*-1.0){
@@ -30,9 +30,8 @@ bool detectFall(){
 
   if(falling){
     delay(1000);
-    Serial.println("Falling..?");
+    //Serial.println("Falling..?");
     // accel
-    threashold = 0.3;
     if (IMU.accelerationAvailable()) {
       IMU.readAcceleration(x, y, z);
       if(x > -0.3){
@@ -41,7 +40,7 @@ bool detectFall(){
     }
 
     if(falling && fallen){
-      Serial.println("Fall Detected!");
+      //Serial.println("Fall Detected!");
       //emergency = true;
       return true;
     }
@@ -57,7 +56,7 @@ bool detectLift(){
   float x, y, z;
   
   // gyro
-  float threashold = 200.0;
+  float threashold = 50.0;
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
     if(x > threashold || x < threashold*-1.0){
@@ -72,10 +71,9 @@ bool detectLift(){
   }
 
   if(lifting){
-    delay(2000);
-    Serial.println("lifting..?");
+    delay(1000);
+    //Serial.println("lifting..?");
     // accel
-    threashold = 0.2;
     if (IMU.accelerationAvailable()) {
       IMU.readAcceleration(x, y, z);
       if(x < -0.8){
@@ -84,7 +82,7 @@ bool detectLift(){
     }
 
     if(lifting && lifted){
-      Serial.println("Lift Detected!");
+      //Serial.println("Lift Detected!");
       //emergency = false;
       return true;
     }

@@ -13,7 +13,7 @@ int prevOutput = 0;
 const int numDataPoints =   199;
 int data[numDataPoints];
 int logIndex = 0;
-int bpmAvrg[5];
+int bpmAvrg[8];
 int bpmAvrgIndex = 0;
 bool logging = false;
 
@@ -35,7 +35,8 @@ void heartLoop(bool pulsing){
       time = millis();
       long beatTime = time - lastBeat;
       bool pass = true;
-      if(beatTime < 2000 && beatTime > 400){
+      if(beatTime < 2000 && beatTime > 400){ 
+        if(pulsing){displayHeartBeat(3, 0, map(beatTime,400,2000,25,52));} //40
         for(int i=0; i<numDataPoints; i++){
           if(data[i] > thresholdUpper){
             pass = false;
@@ -43,7 +44,7 @@ void heartLoop(bool pulsing){
           }
         }
         if(pass){
-          if(pulsing){displayHeartBeat(3, 0, 40);}
+          //if(pulsing){displayHeartBeat(3, 0, 40);}
           int bpm = 60.0 / (beatTime/1000.0);
           //Serial.println("Beat!");
           if(bpm > 40 && bpm < 120){
@@ -51,13 +52,13 @@ void heartLoop(bool pulsing){
             //Serial.println(bpm);
             bpmAvrg[bpmAvrgIndex] = bpm;
             bpmAvrgIndex ++;
-            if(bpmAvrgIndex > 4){
+            if(bpmAvrgIndex > 7){
               bpmAvrgIndex = 0;
               int total = 0;
-              for(int i=0; i<5; i++){
+              for(int i=0; i<8; i++){
                 total += bpmAvrg[i];
               }
-              int avrgBpm = total / 5;
+              int avrgBpm = total / 8;
               //Serial.print("BPM = ");
               //Serial.println(avrgBpm);
               if(online){sendHeartDataToAPI(avrgBpm);}
