@@ -9,7 +9,7 @@ int alert_fall = 15; //seconds
 int alert_alarm = 15; //seconds
 bool alerting = true;
 int alert_volume = 100; //ms
-bool lost = false;
+bool lostMode = false;
 int battery = 70;
 
 bool heartLogging = true;
@@ -115,7 +115,7 @@ void makeAPIRequest() {
     alert_alarm = atoi(alert["alarm"]);
     alerting = (atoi(alert["alert"]) == 1);
     alert_volume = (11-atoi(alert["volume"])) * 20;
-    lost = doc["lost"];
+    lostMode = doc["lost"];
     JsonObject heartData = doc["heartrate"];
     heartLogging = (atoi(heartData["logging"]) == 1);
 

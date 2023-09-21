@@ -3,5 +3,5 @@
 
 void setupBuzzer();
 void activateBuzzer();
-void deactivaeBuzzer();
+void deactivateBuzzer();
 void buzzerLoop(long loopTime);

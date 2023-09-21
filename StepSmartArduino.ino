@@ -112,7 +112,7 @@ bool alert_alarmTimerCallback(void *){
     sendEmergencyDataToAPI(fallDetected);
   }
   showLedsOff();
-  deactivaeBuzzer();
+  deactivateBuzzer();
   emergency = false;
   return false;
 }
@@ -127,7 +127,7 @@ void emergencySwitch(){
     alert_alarmTimer.in(alert_alarm*1000, alert_alarmTimerCallback);
   }else{
     showLedsOff();
-    deactivaeBuzzer();
+    deactivateBuzzer();
     alert_alarmTimer.cancel();
     alert_fallTimer.cancel();
     alertStage = 0;

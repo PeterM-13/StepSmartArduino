@@ -66,7 +66,6 @@ void heartLoop(bool pulsing){
           }
         }
       }
-      //if(pulsing){showLedsOff();}
       lastBeat = time;
     }else{
       data[logIndex] = output;

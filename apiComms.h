@@ -15,7 +15,7 @@ extern long code;
 extern int alert_alarm;
 extern bool alerting;
 extern int alert_volume;
-extern bool lost;
+extern bool lostMode;
 extern int battery;
 extern bool heartLogging;
 extern bool emergency;

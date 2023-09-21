@@ -15,7 +15,7 @@ void activateBuzzer(){
   buzzerActive = true;
 }
 
-void deactivaeBuzzer(){
+void deactivateBuzzer(){
   buzzerActive = false;
   digitalWrite(buzzerPin, HIGH);
 }
@@ -33,7 +33,7 @@ void buzzerLoop(long loopTime){
     digitalWrite(buzzerPin, HIGH);
     showLedsOff();
     delay(buzzerDelay);
-  }else if(lost){
+  }else if(lostMode){
     digitalWrite(buzzerPin, LOW);
     showLedsOn();
     delay(150);

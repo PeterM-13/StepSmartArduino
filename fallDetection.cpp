@@ -14,16 +14,16 @@ bool detectFall(){
   float x, y, z;
   
   // gyro
-  float threashold = 100.0;
+  float threshold = 100.0;
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
-    if(x > threashold || x < threashold*-1.0){
+    if(x > threshold || x < threshold*-1.0){
       falling = true;
     }
-    if(y > threashold || y < threashold*-1.0){
+    if(y > threshold || y < threshold*-1.0){
       falling = true;
     }
-    if(z > threashold || z < threashold*-1.0){
+    if(z > threshold || z < threshold*-1.0){
       falling = true;
     }
   }
@@ -56,16 +56,16 @@ bool detectLift(){
   float x, y, z;
   
   // gyro
-  float threashold = 50.0;
+  float threshold = 50.0;
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
-    if(x > threashold || x < threashold*-1.0){
+    if(x > threshold || x < threshold*-1.0){
       lifting = true;
     }
-    if(y > threashold || y < threashold*-1.0){
+    if(y > threshold || y < threshold*-1.0){
       lifting = true;
     }
-    if(z > threashold || z < threashold*-1.0){
+    if(z > threshold || z < threshold*-1.0){
       lifting = true;
     }
   }
